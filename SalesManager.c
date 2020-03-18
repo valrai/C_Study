@@ -6,11 +6,12 @@
 #include <libpq-fe.h>
 
 #define STOCK_MAX_NUMBER_OF_RECORDS  100
-#define MAX_PRODUCT_NAME_LENGTH  100
+#define MAX_PRODUCT_NAME_LENGTH  200
+#define MAX_PRODUCT_CODE_LENGTH  100
 #define MAX_CONNECTION_STRING_LENGTH  100
 
 const float PROFIT_PERCENTAGE = 0.2;
-typedef enum {  Ok = 200, BadRequest = 400, NotFound = 404, InsufficientStorage = 507} ResultStatus;
+typedef enum {  Ok = 200, BadRequest = 400, NotFound = 404, ServerError = 500, InsufficientStorage = 507} ResultStatus;
 typedef enum { Purchase = 1, Sale = 2 } StockMovimentationType;
 
 typedef struct
@@ -20,8 +21,9 @@ typedef struct
     char* name;
     float costPrice;
     float sellingPrice;
+    int quantity;
 
-}Product;
+}Product;   
 
 typedef struct
 {
@@ -128,17 +130,76 @@ void PrintAllProducts(PGresult *res)
     }
 }
 
-void PrintListProducts(ProductsList *productsList)
+void PrintProductsList(ProductsList *productsList)
 {
     for (int i = 0; i < productsList->lastIndex; i++)
     {
         printf("===================================================\n");
-        printf("%d  %s  %s  %2.f  %2.f\n", productsList->products[i].id, productsList->products[i].code, productsList->products[i].name, productsList->products[i].costPrice, productsList->products[i].sellingPrice); 
+        printf("%s  %s  %2.f  %2.f  %d\n", productsList->products[i].code, productsList->products[i].name, productsList->products[i].costPrice, productsList->products[i].sellingPrice, productsList->products[i].quantity); 
         printf("===================================================\n\n");
     }
 }
 
-void GetAllProducts(PGresult *res, ProductsList *productsList)
+void SetSellingPrice(Product *product)
+{
+    float sellingPrice = product->costPrice + (product->costPrice*PROFIT_PERCENTAGE);
+    product -> sellingPrice = sellingPrice;
+}
+
+
+Result RegisterProduct(ProductsList *products, PGconn *conn)
+{
+    Result result;
+    Product product;
+
+    char name[MAX_PRODUCT_NAME_LENGTH], code[MAX_PRODUCT_CODE_LENGTH];
+    int quantity;
+    float costPrice;
+
+    system("clear||cls");
+    printf("\n================================================\n\n");
+    printf("Inform the code of the product: ");
+    fgets(code, MAX_PRODUCT_CODE_LENGTH, stdin);
+    RemoveNewLine(code);
+    printf("\nInform the name of the product: ");
+    fgets(name, MAX_PRODUCT_NAME_LENGTH, stdin);
+    RemoveNewLine(name);
+    printf("\nInform the quantity of products: ");
+    scanf("%d", &quantity);
+    printf("\nInform the purchase cost of the product: ");
+    scanf("%f", &costPrice);
+    printf("\n================================================\n");   
+
+    product.name = name;
+    product.code = code;
+    product.quantity = quantity;
+    product.costPrice = costPrice;
+    SetSellingPrice(&product);
+
+    ProductsList pl;
+    pl.products[0] = product;
+    PrintProductsList(&pl);
+
+
+    char query[600];
+    snprintf(query, 600, "INSERT INTO \"Product\"(code, \"costPrice\", name, \"sellingPrice\", quantity) VALUES (\'%s\' , %.2f, \'%s\', %.2f, %d);", product.code, product.costPrice, product.name, product.sellingPrice, product.quantity);
+
+    PGresult* res = DbQuery(conn, query);
+
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+
+        result.message = strcat("Insertion failed, ", PQerrorMessage(conn));
+        result.status = ServerError;        
+    }
+    else{
+         result.message = "Product insert sucessfully";
+         result.status = Ok;
+    }
+    PQclear(res);
+    return result;
+}
+
+void MountProducts(PGresult *res, ProductsList *productsList)
 {
     int nRows = PQntuples(res);
 
@@ -149,7 +210,7 @@ void GetAllProducts(PGresult *res, ProductsList *productsList)
         product.code = PQgetvalue(res, i, 0);
         product.costPrice = strtof(PQgetvalue(res, i, 1), NULL);
         product.id = atoll(PQgetvalue(res, i, 2));
-        product.name = PQgetvalue(res, i, 3);
+        strcpy(product.name, PQgetvalue(res, i, 3));
         product.sellingPrice = strtof(PQgetvalue(res, i, 4), NULL);
 
         productsList->products[productsList->lastIndex] = product;
@@ -165,7 +226,6 @@ int main()
     products.lastIndex = 0;
 
     PGconn *conn = PQconnectdb(connectionString);
-
            
     if (PQstatus(conn) == CONNECTION_BAD) 
     {
@@ -177,18 +237,23 @@ int main()
     }
    
 
-    PGresult *res = DbQuery(conn, "SELECT * FROM \"Product\"");
+    // PGresult *res = DbQuery(conn, "SELECT * FROM \"Product\"");
 
-    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+    // if (PQresultStatus(res) != PGRES_TUPLES_OK) {
 
-        printf("No data found\n");        
-        CloseDbConnection(conn, res);
-    } 
+    //     printf("No data found\n");        
+    //     CloseDbConnection(conn, res);
+    // } 
 
-    GetAllProducts(res, &products);
-    PrintListProducts(&products);
+    // MountProducts(res, &products);
+    // PrintListProducts(&products);
 
-    CloseDbConnection(conn, res);
+    Result result = RegisterProduct(&products, conn);
+    printf("\n================\n%s", result.message);
+
+    PQfinish(conn);
+
+    // CloseDbConnection(conn, res);
 
     return 0;
 }
