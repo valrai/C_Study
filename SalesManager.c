@@ -59,8 +59,15 @@ typedef struct
 {
     char* message;
     ResultStatus status; 
-
+    
 }Result;
+
+typedef struct ProductQueryResult
+{
+    Result result;
+    ProductsList productsList;
+    
+}PResult;
 
 //================================================= Helpers ============================================================
 
@@ -208,6 +215,42 @@ void MountProducts(PGresult *res, ProductsList *productsList)
     }
 }
 
+ProductsList SelectProducts(PGconn *conn, char* query, PGresult* res)
+{
+    ProductsList products;
+    res = DbQuery(conn, query);
+    ExecStatusType status = PQresultStatus(res);
+
+    if (status == PGRES_TUPLES_OK || status == PGRES_SINGLE_TUPLE) 
+        MountProducts(res, &products);   
+
+    return products;
+}
+
+PResult GetAllProducts(PGconn *conn, char *query)
+{
+    PResult pResult;
+    PGresult* res;    
+
+    ProductsList products = SelectProducts(conn, query, res);
+    pResult.productsList = products;
+    char *errorMessage = PQerrorMessage(conn);
+    int nRows = PQntuples(res);
+
+    if (strlen(errorMessage) > 0)
+    {
+        strcpy(pResult.result.message, errorMessage);
+        pResult.result.status = BadRequest;
+    }
+    else
+    {
+        sprintf(pResult.result.message, "The search return %d results.", nRows);
+        pResult.result.status = Ok;
+    }
+
+    return pResult;
+}
+
 int main() 
 {    
     char connectionString[MAX_CONNECTION_STRING_LENGTH];    
@@ -226,14 +269,24 @@ int main()
         PQfinish(conn);
         exit(1);
     }
-   
-    SetProduct(&product);
-    Result result = RegisterProduct(product, conn);
 
+    PResult pResult = GetAllProducts(conn, "SELECT * FROM \"Product\"");
     system("clear||cls");
+
+    if (pResult.result.status == Ok)
+        PrintProductsList(&pResult.productsList);
+
     printf(BORDER);
-    printf("%s", result.message);
+    printf("%s", pResult.result.message);
     printf(BORDER);
+
+    // SetProduct(&product);
+    // Result result = RegisterProduct(product, conn);
+
+    // system("clear||cls");
+    // printf(BORDER);
+    // printf("%s", result.message);
+    // printf(BORDER);
 
     PQfinish(conn);
 
