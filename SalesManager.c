@@ -124,7 +124,9 @@ PGresult* DbQuery(PGconn *conn, char* query)
     return PQexec(conn, query);
 }
 
-void PrintAllProducts(PGresult *res)
+//=====================================================================================================================
+
+void PrintResults(PGresult *res)
 {
     int nRows = PQntuples(res);
     int nCols = PQnfields(res);
@@ -184,8 +186,8 @@ Result RegisterProduct(Product product, PGconn *conn)
 
     PGresult* res = DbQuery(conn, query);
 
-    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) 
+    {
         result.message = PQerrorMessage(conn);
         result.status = ServerError;        
     }
@@ -199,7 +201,6 @@ Result RegisterProduct(Product product, PGconn *conn)
 void MountProducts(PGresult *res, ProductsList *productsList)
 {
     int nRows = PQntuples(res);
-
     Product product;
     
     for(int i = 0; i < nRows; i++)
@@ -228,7 +229,7 @@ ProductsList SelectProducts(PGconn *conn, char* query, PGresult* res)
     return products;
 }
 
-PResult GetAllProducts(PGconn *conn, char *query)
+PResult GetProducts(PGconn *conn, char *query)
 {
     PResult pResult;
     PGresult* res; 
@@ -252,6 +253,56 @@ PResult GetAllProducts(PGconn *conn, char *query)
     return pResult;
 }
 
+Result RemoveProduct(PGconn *conn, int id)
+{
+    Result result;
+    char query[50];
+    sprintf(query, "DELETE FROM \"Product\" WHERE id = %d", id);
+
+    PGresult* res = DbQuery(conn, query);
+    ExecStatusType status = PQresultStatus(res);
+
+    if (status == PGRES_COMMAND_OK){
+        result.status = Ok;
+        result.message = "product was sucessfully removed!";
+    }
+    else{
+        result.status = BadRequest;
+        result.message = PQerrorMessage(conn);
+    }
+
+    return result;
+}
+
+Result EditProduct(PGconn *conn, Product product, int  id)
+{
+    char query[200];
+    Result result;
+
+    if (id <= 0){
+        result.status = BadRequest;
+        result.message = "You must inform a valid identifier.";
+
+        return result;
+    }
+
+    sprintf(query, "UPDATE \"Product\" SET code='%s', \"costPrice\"=%.2f, name='%s', \"sellingPrice\"=%.2f, quantity=%d WHERE id = %d;", product.code, product.costPrice, product.name, product.sellingPrice, product.quantity, id);
+
+    PGresult* res = DbQuery(conn, query);
+    ExecStatusType status = PQresultStatus(res);
+
+    if (status == PGRES_COMMAND_OK){
+    result.status = Ok;
+    result.message = "product was sucessfully updated!";
+    }
+    else{
+        result.status = BadRequest;
+        result.message = PQerrorMessage(conn);
+    }
+
+    return result;
+}
+
 int main() 
 {    
     char connectionString[MAX_CONNECTION_STRING_LENGTH];    
@@ -271,23 +322,26 @@ int main()
         exit(1);
     }
 
-    PResult pResult = GetAllProducts(conn, "SELECT * FROM \"Product\"");
-    system("clear||cls");
+    SetProduct(&product);
+    Result result = EditProduct(conn, product, 8);
 
-    if (pResult.result.status == Ok)
-        PrintProductsList(&pResult.productsList);
+    // PResult pResult = GetProducts(conn, "SELECT * FROM \"Product\";");
+    // system("clear||cls");
 
-    printf(BORDER);
-    printf("%s", pResult.result.message);
-    printf(BORDER);
+    // if (pResult.result.status == Ok)
+    //     PrintProductsList(&pResult.productsList);
+
+    // printf(BORDER);
+    // printf("%s", pResult.result.message);
+    // printf(BORDER);
 
     // SetProduct(&product);
     // Result result = RegisterProduct(product, conn);
 
-    // system("clear||cls");
-    // printf(BORDER);
-    // printf("%s", result.message);
-    // printf(BORDER);
+    system("clear||cls");
+    printf(BORDER);
+    printf("%s", result.message);
+    printf(BORDER);
 
     PQfinish(conn);
 
