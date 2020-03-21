@@ -209,6 +209,7 @@ void MountProducts(PGresult *res, ProductsList *productsList)
         product.id = atoll(PQgetvalue(res, i, 2));
         strcpy(product.name, PQgetvalue(res, i, 3));
         product.sellingPrice = strtof(PQgetvalue(res, i, 4), NULL);
+        product.quantity = atoll(PQgetvalue(res, i, 5));
 
         productsList->products[productsList->lastIndex] = product;
         productsList->lastIndex++;
@@ -230,12 +231,10 @@ ProductsList SelectProducts(PGconn *conn, char* query, PGresult* res)
 PResult GetAllProducts(PGconn *conn, char *query)
 {
     PResult pResult;
-    PGresult* res;    
+    PGresult* res; 
 
-    ProductsList products = SelectProducts(conn, query, res);
-    pResult.productsList = products;
+    pResult.productsList = SelectProducts(conn, query, res);
     char *errorMessage = PQerrorMessage(conn);
-    int nRows = PQntuples(res);
 
     if (strlen(errorMessage) > 0)
     {
@@ -244,7 +243,9 @@ PResult GetAllProducts(PGconn *conn, char *query)
     }
     else
     {
-        sprintf(pResult.result.message, "The search return %d results.", nRows);
+        char buffer[50];
+        sprintf(buffer, "The search return %d results.", pResult.productsList.lastIndex);
+        pResult.result.message = buffer;
         pResult.result.status = Ok;
     }
 
