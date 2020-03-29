@@ -28,25 +28,22 @@ typedef struct
 typedef struct
 {
     int id;     
-    int saleId;
-    int purchaseId;
     time_t date;
-    StockMovimentationType type;
-    int previousQuant;
+    int quant;
+    double totalPrice;
+    Product *soldProducts;
+
+}Sale;
+
+typedef struct
+{
+    int id;     
+    time_t date;
     int quant;
     double totalCost;
+    Product *boughtProducts;
 
-}StockMovimentation;
-
-typedef struct StockMovimentation_Product
-{
-    int id;
-    StockMovimentation stockMovimentation;
-    Product product;
-    int productQuantity;
-    float productUnitaryPrice;
-
-}SM_Product;
+}Purchase;
 
 typedef struct 
 {
