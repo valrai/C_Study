@@ -7,6 +7,8 @@
 #define MAX_QUANTITY_OF_STUDENTS 60
 
 const char* BORDER = "\n========================================================\n";
+const char* NOT_FOUND_MESSAGE = "Não foram encontrados resultados para o RA informado.";
+const char* INSUFFICIENT_STORAGE_MESSAGE = "Não é possível cadastrar novos alunos, Armazenamento cheio.";
 
 typedef struct
 {
@@ -137,7 +139,7 @@ void RegisterStudents(LStudents *studentsList)
     {
         system("clear||cls");
         printf(BORDER);
-        printf("\nNão é possível cadastrar novos alunos, Armazenamento cheio.\n");
+        printf("\n%s\n", INSUFFICIENT_STORAGE_MESSAGE);
         printf(BORDER);
         Pause("");
 
@@ -234,7 +236,7 @@ void SearchByRAHandler(LStudents studentsList)
     else
     {
         printf(BORDER);
-        printf("\nNão foram encontrados resultados para o RA informado.\n");
+        printf("\n%s\n", NOT_FOUND_MESSAGE);
         printf(BORDER);
         Pause("");
     } 
@@ -260,7 +262,7 @@ void SearchByNameHandler(LStudents studentsList)
     else
     {
         printf(BORDER);
-        printf("\nNão foram encontrados resultados para o nome informado.\n");
+        printf("\n%s\n", NOT_FOUND_MESSAGE);
         printf(BORDER);
         Pause("");
     } 
@@ -337,10 +339,45 @@ void SetStudentGrades(LStudents* studentsList)
     else{
         system("clear||cls");
         printf(BORDER);
-        printf("Não foram encontrados resultados para o RA informado.\n");
+        printf("\n%s\n", NOT_FOUND_MESSAGE);
+        printf(BORDER);
         Pause("");
     }
 
+}
+
+void RemoveStudent(int index, LStudents* studentsList)
+{
+    studentsList->lastIndex--;
+    for (int i = index; i < studentsList->lastIndex; i++)
+        studentsList->students[i] = studentsList->students[i+1];
+        
+}
+
+void RemoveStudentHandler(LStudents* studentsList)
+{
+    int studentRA;
+    char * message;
+    system("clear||cls");
+    printf(BORDER);
+    printf("Informe o RA do aluno:");
+    scanf("%d", &studentRA);
+
+    int indexResult = FindStudentByRa(studentRA, studentsList);
+
+    if (indexResult == -1)
+        message = NOT_FOUND_MESSAGE;  
+    else
+    {
+        RemoveStudent(indexResult, studentsList);
+        message = "Aluno removido com sucesso!";
+    }
+
+    system("clear||cls");
+    printf(BORDER);
+    printf("\n%s\n", message);
+    printf(BORDER);
+    Pause("");
 }
 
 int main ()
@@ -363,7 +400,7 @@ int main ()
         {
             case 1: RegisterStudents(&studentsList); break;
             case 2: SetStudentGrades(&studentsList); break;
-            case 3: break;
+            case 3: RemoveStudentHandler(&studentsList); break;
             case 4: ConsultMenu(studentsList); break;
             case 5: break;
             case 6: ReportMenu(studentsList); break;
