@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 
 #define MAX_QUANTITY_OF_STUDENT_GRADES 4
 #define MAX_STUDENT_NAME_SIZE 100
@@ -197,7 +198,7 @@ void ReportMenu(LStudents studentsList)
     {
         system("clear||cls");
         printf(BORDER);
-        printf("\nSelecione uma opcao:\n\n1 - Emitir  relatorio ordenado por R.A.\n2 - Emitir  relatorio ordenado por Nome\n3 - Emitir  relatorio de medias\n4 - Emitir relatorio com filtro de media\n\n0 - Voltar\n");
+        printf("\nSelecione uma opção:\n\n1 - Emitir  relatório ordenado por R.A.\n2 - Emitir  relatório ordenado por Nome\n3 - Emitir  relatório de medias\n4 - Emitir relatório com filtro de média\n\n0 - Voltar\n");
         printf(BORDER);
         scanf("%d", &option);
         system("clear||cls");
@@ -276,7 +277,7 @@ void ConsultMenu(LStudents studentsList)
     {
         system("clear||cls");
         printf(BORDER);
-        printf("\nSelecione uma opcao:\n\n1 - Buscar por RA\n2 - Buscar por Nome\n3 - Listar Todos\n\n0 - Voltar\n");
+        printf("\nSelecione uma opção:\n\n1 - Buscar por RA\n2 - Buscar por Nome\n3 - Listar Todos\n\n0 - Voltar\n");
         printf(BORDER);
         scanf("%d", &option);
         system("clear||cls");
@@ -385,13 +386,14 @@ int main ()
     LStudents studentsList;
     int option;
 
+    setlocale(LC_ALL, "pt-BR");
     studentsList.lastIndex = 0;
     system("clear||cls");
 
     do
     {
         printf(BORDER);
-        printf("Selecione uma opcao:\n\n1 - Cadastrar Aluno\n2 - Registrar notas dos alunos\n3 - Remover Aluno\n4 - Consultar Alunos\n5 - Alterar dados Aluno\n6 - Emitir Relatorios\n\n0 - Sair\n");
+        printf("Selecione uma opção:\n\n1 - Cadastrar Aluno\n2 - Registrar notas dos alunos\n3 - Remover Aluno\n4 - Consultar Alunos\n5 - Alterar dados Aluno\n6 - Emitir Relatórios\n\n0 - Sair\n");
         printf(BORDER);
         scanf("%d", &option);
         system("clear||cls");

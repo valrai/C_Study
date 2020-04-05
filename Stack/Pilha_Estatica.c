@@ -44,6 +44,11 @@ void InicializarPilha(TPilha *pilha)
     pilha->topo = -1;
 }
 
+bool EstaVazia(TPilha *pilha)
+{
+    return pilha->topo < 0;
+}
+
 void Push(TPilha *pilha, TElemento novoElemento)
 {
     pilha->topo++;
@@ -83,7 +88,7 @@ void Desempilhar(TPilha *pilha)
     system("clear||cls");
     printf("%s\n", BORDER);
 
-    if (pilha->topo > -1)
+    if (!EstaVazia(pilha))
         printf("\nValor Desempilhado : %d\n", Pop(pilha).valor);    
     else
         printf("\nPilha vazia!\n");
@@ -97,7 +102,7 @@ void ApresentarPilha(TPilha *pilha)
     system("clear||cls");
     printf("%s\n", BORDER);
 
-    if (pilha->topo < 0)
+    if (EstaVazia(pilha))
         printf("\tPilha vazia.");
     else    
         for (int i = pilha->topo; i >= 0 ; i--)
@@ -113,7 +118,7 @@ void ApresentarTodasPilhas(TPilha *pilha1, TPilha *pilha2)
 
     printf("%sPilha 1%s\n", BORDER, BORDER);
     
-    if (pilha1->topo < 0)
+    if (EstaVazia(pilha1))
         printf("Pilha vazia.");
     else
         for (int i = pilha1->topo; i >= 0 ; i--)
@@ -121,7 +126,7 @@ void ApresentarTodasPilhas(TPilha *pilha1, TPilha *pilha2)
 
     printf("%sPilha 2%s\n", BORDER, BORDER);
 
-    if (pilha2->topo < 0)
+    if (EstaVazia(pilha2))
         printf("Pilha vazia.");
     else
         for (int i = pilha2->topo; i >= 0 ; i--)
@@ -216,21 +221,67 @@ void MenuApresentacao(TPilha *pilha1, TPilha *pilha2)
     } while (op != 0);   
 }
 
-TPilha ObterPilhaInvertida(TPilha *pilha)
+void EmpilharNoFundo(TPilha *pilha, TElemento elemento)
 {
-    TPilha pilhaAux;
-    InicializarPilha(&pilhaAux);
+    if (EstaVazia(pilha))
+        Push(pilha, elemento);
+    else
+    {
+        TElemento elementoAux = Pop(pilha);
+        EmpilharNoFundo(pilha, elemento);
+        Push(pilha, elementoAux);
+    }
+    
+}
 
-    for (int i = pilha->topo; i >= 0 ; i--)
-        Push(&pilhaAux, Pop(pilha));
+void InverterPilha(TPilha *pilha)
+{
+    if (!EstaVazia(pilha))
+    {
+        TElemento elementoAux = Pop(pilha);
+        InverterPilha(pilha);
+        EmpilharNoFundo(pilha, elementoAux);
+    }
+}
 
-    return pilhaAux;
+void MenuInvercao(TPilha *pilha1, TPilha *pilha2)
+{
+    int op;
+
+    do
+    {
+        system("clear||cls");
+        printf("%s\nSelecione uma opção:\n\n1 - Inverter Pilha 1\n2 - Inverter Pilha 2\n3 - Inverter Ambas as Pilhas\n\n0 - Voltar\n%s", BORDER, BORDER);
+        scanf("%d", &op);
+        system("clear||cls");        
+
+        switch(op)
+        {
+            case 1:
+                InverterPilha(pilha1);
+                printf("%s\nPilha invertida com sucesso!\n%s", BORDER, BORDER);
+                Pause("");
+                break;
+            case 2:
+                InverterPilha(pilha2);
+                printf("%s\nPilha invertida com sucesso!\n%s", BORDER, BORDER);
+                Pause("");
+                break;
+            case 3:
+                InverterPilha(pilha1);
+                InverterPilha(pilha2);
+                printf("%s\nPilhas invertidas com sucesso!\n%s", BORDER, BORDER);
+                Pause("");
+                break;
+        }
+
+    } while (op != 0);
 }
 
 int main ()
 {
     TPilha pilha1, pilha2;
-    int op, option;
+    int op;
 
     setlocale(LC_ALL, "pt-BR");
     InicializarPilha(&pilha1);    
@@ -248,39 +299,7 @@ int main ()
             case 1: MenuEmpilhar(&pilha1, &pilha2); break;
             case 2: MenuDesempilhar(&pilha1, &pilha2); break;
             case 3: MenuApresentacao(&pilha1, &pilha2); break;
-            case 4:    
-
-                do
-                {
-                    system("clear||cls");
-                    printf(BORDER);
-                    printf("\nSelecione uma opção:\n\n1 - Inverter Pilha 1\n2 - Inverter Pilha 2\n3 - Inverter Ambas as Pilhas\n\n0 - Voltar\n");
-                    printf(BORDER);
-                    scanf("%d", &option);
-                    system("clear||cls");        
-
-                    switch(option)
-                    {
-                        case 1:
-                            pilha1 = ObterPilhaInvertida(&pilha1);
-                            printf("%s\nPilha invertida com sucesso!\n%s", BORDER, BORDER);
-                            Pause("");
-                            break;
-                        case 2:
-                            pilha2 = ObterPilhaInvertida(&pilha2);
-                            printf("\n%sPilha invertida com sucesso!\n%s", BORDER, BORDER);
-                            Pause("");
-                            break;
-                        case 3:
-                            pilha1 = ObterPilhaInvertida(&pilha1);
-                            pilha2 = ObterPilhaInvertida(&pilha2);
-                            printf("\n%sPilhas invertidas com sucesso!\n%s", BORDER, BORDER);
-                            Pause("");
-                            break;
-                    }
-
-                } while (option != 0); break;
-
+            case 4: MenuInvercao(&pilha1, &pilha2); break;
             case 5: VerificarIgualdadePilhas(&pilha1, &pilha2); break;
         }
 

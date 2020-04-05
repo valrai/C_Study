@@ -44,6 +44,11 @@ void InitializeStack(Stack *stack)
     stack->top = -1;
 }
 
+bool IsEmpty(Stack *stack)
+{
+    return stack->top < 0;
+}
+
 void Push(Stack *stack, TElement newElement)
 {
     stack->top++;
@@ -216,21 +221,67 @@ void PresentationMenu(Stack *stack1, Stack *stack2)
     } while (op != 0);   
 }
 
-Stack GetInverseStack(Stack *stack)
+void InsertAtBottom(Stack *stack, TElement elemento)
 {
-    Stack auxStack;
-    InitializeStack(&auxStack);
+    if (IsEmpty(stack))
+        Push(stack, elemento);
+    else
+    {
+        TElement auxElement = Pop(stack);
+        InsertAtBottom(stack, elemento);
+        Push(stack, auxElement);
+    }
+    
+}
 
-    for (int i = stack->top; i >= 0 ; i--)
-        Push(&auxStack, Pop(stack));
+void ReverseStack(Stack *stack)
+{
+    if (!IsEmpty(stack))
+    {
+        TElement auxElement = Pop(stack);
+        ReverseStack(stack);
+        InsertAtBottom(stack, auxElement);
+    }
+}
 
-    return auxStack;
+void ReverseStackMenu(Stack *stack1, Stack *stack2)
+{
+    int op;
+
+    do
+    {
+        system("clear||cls");
+        printf("%s\nSelecione uma opção:\n\n1 - Inverter Pilha 1\n2 - Inverter Pilha 2\n3 - Inverter Ambas as Pilhas\n\n0 - Voltar\n%s", BORDER, BORDER);
+        scanf("%d", &op);
+        system("clear||cls");        
+
+        switch(op)
+        {
+            case 1:
+                ReverseStack(stack1);
+                printf("%s\nPilha invertida com sucesso!\n%s", BORDER, BORDER);
+                Pause("");
+                break;
+            case 2:
+                ReverseStack(stack2);
+                printf("%s\nPilha invertida com sucesso!\n%s", BORDER, BORDER);
+                Pause("");
+                break;
+            case 3:
+                ReverseStack(stack1);
+                ReverseStack(stack2);
+                printf("%s\nPilhas invertidas com sucesso!\n%s", BORDER, BORDER);
+                Pause("");
+                break;
+        }
+
+    } while (op != 0);
 }
 
 int main ()
 {
     Stack stack1, stack2;
-    int op, option;
+    int op;
 
     setlocale(LC_ALL, "pt-BR");
     InitializeStack(&stack1);    
@@ -248,39 +299,7 @@ int main ()
             case 1: StackMenu(&stack1, &stack2); break;
             case 2: UnstackMenu(&stack1, &stack2); break;
             case 3: PresentationMenu(&stack1, &stack2); break;
-            case 4:    
-
-                do
-                {
-                    system("clear||cls");
-                    printf(BORDER);
-                    printf("\nSelecione uma opção:\n\n1 - Inverter pilha 1\n2 - Inverter pilha 2\n3 - Inverter Ambas as pilhas\n\n0 - Voltar\n");
-                    printf(BORDER);
-                    scanf("%d", &option);
-                    system("clear||cls");        
-
-                    switch(option)
-                    {
-                        case 1:
-                            stack1 = GetInverseStack(&stack1);
-                            printf("\n%spilha invertida com sucesso!\n%s", BORDER, BORDER);
-                            Pause("");
-                            break;
-                        case 2:
-                            stack2 = GetInverseStack(&stack2);
-                            printf("\n%spilha invertida com sucesso!\n%s", BORDER, BORDER);
-                            Pause("");
-                            break;
-                        case 3:
-                            stack1 = GetInverseStack(&stack1);
-                            stack2 = GetInverseStack(&stack2);
-                            printf("\n%spilha invertidas com sucesso!\n%s", BORDER, BORDER);
-                            Pause("");
-                            break;
-                    }
-
-                } while (option != 0); break;
-
+            case 4: ReverseStackMenu(&stack1, &stack2); break;
             case 5: CheckStacksEquality(&stack1, &stack2); break;
         }
 
