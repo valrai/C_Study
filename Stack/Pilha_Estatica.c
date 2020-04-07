@@ -179,7 +179,7 @@ bool IsEqual(TPilha *pilha1, TPilha *pilha2)
     if (pilha1->topo != pilha2->topo)
         return false;
 
-    for (int i = pilha2->topo; i > -1 ; i--)
+    for (int i = pilha2->topo; i >= 0 ; i--)
         if (pilha1->pilhaElementos[i].valor != pilha2->pilhaElementos[i].valor)
             return false;
 
@@ -230,8 +230,7 @@ void EmpilharNoFundo(TPilha *pilha, TElemento elemento)
         TElemento elementoAux = Pop(pilha);
         EmpilharNoFundo(pilha, elemento);
         Push(pilha, elementoAux);
-    }
-    
+    }    
 }
 
 void InverterPilha(TPilha *pilha)
@@ -242,6 +241,81 @@ void InverterPilha(TPilha *pilha)
         InverterPilha(pilha);
         EmpilharNoFundo(pilha, elementoAux);
     }
+}
+
+bool ElementoExisteNaPilha(TPilha *pilha, TElemento elemento)
+{
+    for (int i = pilha->topo; i >= 0; i--)
+        if (pilha->pilhaElementos[i].valor == elemento.valor)  
+            return true;
+    return false;
+}
+
+void RemoverElemento(TPilha *pilha, TElemento elemento)
+{
+    TPilha pilhaAux;
+    TElemento elementoRemovido;
+    InicializarPilha(&pilhaAux);
+
+    do
+    {
+        elementoRemovido = Pop(pilha);
+        if (elementoRemovido.valor != elemento.valor)
+            Push(&pilhaAux, elementoRemovido);
+
+    } while (elementoRemovido.valor != elemento.valor && pilha->topo > 0);
+    
+    for (int i = pilhaAux.topo; i >= 0; i--)
+        Push(pilha, Pop(&pilhaAux));    
+}
+
+void MenuRemoverElemento(TPilha *pilha1, TPilha *pilha2)
+{
+    int op;
+    TElemento elemento;
+
+    do
+    {
+        system("clear||cls");
+        printf("%s\nSelecione uma opção:\n\n1 - Remover elemento da Pilha 1\n2 - Remover elemento da Pilha 2\n\n0 - Voltar\n%s", BORDER, BORDER);
+        scanf("%d", &op);
+        system("clear||cls");        
+
+        if (op == 0) break;
+        
+        printf("%s\nInforme o valor que deseja remover: ", BORDER);
+        scanf("%d", &elemento.valor);
+
+        if (op == 1)        
+            if (ElementoExisteNaPilha(pilha1, elemento))
+            {
+                RemoverElemento(pilha1, elemento);
+                system("clear||cls");
+                printf("%s\n Valor removido com sucesso!\n%s", BORDER, BORDER); 
+            }
+            else
+            {
+                system("clear||cls");
+                printf("%s\n Valor não está presente na pilha.\n%s", BORDER, BORDER); 
+            }
+        
+        else if (op == 2)
+            if (ElementoExisteNaPilha(pilha2, elemento))
+            {
+                RemoverElemento(pilha2, elemento);
+                system("clear||cls");
+                printf("%s\n Valor removido com sucesso!\n%s", BORDER, BORDER); 
+            }
+            else
+            {
+                system("clear||cls");
+                printf("%s\n Valor não está presente na pilha.\n%s", BORDER, BORDER); 
+            }    
+
+        Pause("");        
+
+    }while(op != 0);
+    
 }
 
 void MenuInvercao(TPilha *pilha1, TPilha *pilha2)
@@ -290,7 +364,7 @@ int main ()
     do
     {
         system("clear||cls");
-        printf("%s\nSelecione uma opção:\n\n1 - Empilhar Elementos\n2 - Desempilhar Elementos\n3 - Apresentar Pilha\n4 - Inverter Pilha\n5 - Verificar igualdade entre as pilhas\n\n0 - Sair\n%s", BORDER, BORDER);
+        printf("%s\nSelecione uma opção:\n\n1 - Empilhar Elementos\n2 - Desempilhar Elementos\n3 - Apresentar Pilha\n4 - Inverter Pilha\n5 - Verificar igualdade entre as pilhas\n6 - Remover elemento por valor\n\n0 - Sair\n%s", BORDER, BORDER);
         scanf("%d", &op);
         system("clear||cls");
 
@@ -301,6 +375,8 @@ int main ()
             case 3: MenuApresentacao(&pilha1, &pilha2); break;
             case 4: MenuInvercao(&pilha1, &pilha2); break;
             case 5: VerificarIgualdadePilhas(&pilha1, &pilha2); break;
+            case 6: MenuRemoverElemento(&pilha1, &pilha2); break;
+
         }
 
     } while (op != 0);    

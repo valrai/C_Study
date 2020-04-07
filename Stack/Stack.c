@@ -278,6 +278,81 @@ void ReverseStackMenu(Stack *stack1, Stack *stack2)
     } while (op != 0);
 }
 
+bool Any(Stack *stack, TElement element)
+{
+    for (int i = stack->top; i >= 0; i--)
+        if (stack->stackElements[i].value == element.value)  
+            return true;
+    return false;
+}
+
+void RemoveElement(Stack *stack, TElement element)
+{
+    Stack auxStack;
+    TElement elementRemoved;
+    InitializeStack(&auxStack);
+
+    do
+    {
+        elementRemoved = Pop(stack);
+        if (elementRemoved.value != element.value)
+            Push(&auxStack, elementRemoved);
+
+    } while (elementRemoved.value != element.value && stack->top > 0);
+    
+    for (int i = auxStack.top; i >= 0; i--)
+        Push(stack, Pop(&auxStack));    
+}
+
+void RemoveElementMenu(Stack *stack1, Stack *stack2)
+{
+    int op;
+    TElement element;
+
+    do
+    {
+        system("clear||cls");
+        printf("%s\nSelecione uma opção:\n\n1 - Remover elemento da Pilha 1\n2 - Remover elemento da Pilha 2\n\n0 - Voltar\n%s", BORDER, BORDER);
+        scanf("%d", &op);
+        system("clear||cls");        
+
+        if (op == 0) break;
+        
+        printf("%s\nInforme o valor que deseja remover: ", BORDER);
+        scanf("%d", &element.value);
+
+        if (op == 1)        
+            if (Any(stack1, element))
+            {
+                RemoveElement(stack1, element);
+                system("clear||cls");
+                printf("%s\n Valor removido com sucesso!\n%s", BORDER, BORDER); 
+            }
+            else
+            {
+                system("clear||cls");
+                printf("%s\n Valor não está presente na pilha.\n%s", BORDER, BORDER); 
+            }
+        
+        else if (op == 2)
+            if (Any(stack2, element))
+            {
+                RemoveElement(stack2, element);
+                system("clear||cls");
+                printf("%s\n Valor removido com sucesso!\n%s", BORDER, BORDER); 
+            }
+            else
+            {
+                system("clear||cls");
+                printf("%s\n Valor não está presente na pilha.\n%s", BORDER, BORDER); 
+            }    
+
+        Pause("");        
+
+    }while(op != 0);
+    
+}
+
 int main ()
 {
     Stack stack1, stack2;
@@ -290,7 +365,7 @@ int main ()
     do
     {
         system("clear||cls");
-        printf("%s\nSelecione uma opção:\n\n1 - Empilhar Elementos\n2 - Desempilhar Elementos\n3 - Apresentar pilha\n4 - Inverter pilha\n5 - Verificar igualdade entre as pilhas\n\n0 - Sair\n%s", BORDER, BORDER);
+        printf("%s\nSelecione uma opção:\n\n1 - Empilhar Elementos\n2 - Desempilhar Elementos\n3 - Apresentar pilha\n4 - Inverter pilha\n5 - Verificar igualdade entre as pilhas\n6 - Remover elemento por valor\n\n0 - Sair\n%s", BORDER, BORDER);
         scanf("%d", &op);
         system("clear||cls");
 
@@ -301,6 +376,7 @@ int main ()
             case 3: PresentationMenu(&stack1, &stack2); break;
             case 4: ReverseStackMenu(&stack1, &stack2); break;
             case 5: CheckStacksEquality(&stack1, &stack2); break;
+            case 6: RemoveElementMenu(&stack1, &stack2); break;
         }
 
     } while (op != 0);    

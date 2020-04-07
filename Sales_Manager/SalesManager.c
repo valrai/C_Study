@@ -4,32 +4,28 @@
 #include <string.h>
 #include <stdbool.h>
 #include <libpq-fe.h>
+#include <ncurses.h>
 
 #define STOCK_MAX_NUMBER_OF_RECORDS  100
 #define MAX_PRODUCT_NAME_LENGTH  200
-#define MAX_PRODUCT_CODE_LENGTH  100
 #define MAX_CONNECTION_STRING_LENGTH  100
 
 const float PROFIT_PERCENTAGE = 0.2;
 const char* BORDER = "\n================================================\n";
 typedef enum {  Ok = 200, BadRequest = 400, NotFound = 404, ServerError = 500, InsufficientStorage = 507} ResultStatus;
-typedef enum { Purchase = 1, Sale = 2 } StockMovimentationType;
 
 typedef struct
 {
-    int id;
+    int id, code, quantity;
     char name[MAX_PRODUCT_NAME_LENGTH];
-    char code[MAX_PRODUCT_CODE_LENGTH];
     float costPrice, sellingPrice;
-    int quantity;
 
 }Product;   
 
 typedef struct
 {
-    int id;     
+    int id, quant;     
     time_t date;
-    int quant;
     double totalPrice;
     Product *soldProducts;
 
@@ -37,9 +33,8 @@ typedef struct
 
 typedef struct
 {
-    int id;     
+    int id, quant;     
     time_t date;
-    int quant;
     double totalCost;
     Product *boughtProducts;
 
@@ -121,8 +116,16 @@ PGresult* DbQuery(PGconn *conn, char* query)
     return PQexec(conn, query);
 }
 
+void InitializeList(ProductsList *list)
+{
+    list->lastIndex = 0;
+}
+
 //=====================================================================================================================
 
+
+
+//=====================================================================================================================
 void PrintResults(PGresult *res)
 {
     int nRows = PQntuples(res);
@@ -141,7 +144,7 @@ void PrintProductsList(ProductsList *productsList)
     for (int i = 0; i < productsList->lastIndex; i++)
     {
         printf(BORDER);
-        printf("%s  %s  %2.f  %2.f  %d", productsList->products[i].code, productsList->products[i].name, productsList->products[i].costPrice, productsList->products[i].sellingPrice, productsList->products[i].quantity); 
+        printf("%s  %d  %2.f  %2.f  %d", productsList->products[i].code, productsList->products[i].name, productsList->products[i].costPrice, productsList->products[i].sellingPrice, productsList->products[i].quantity); 
         printf(BORDER);
     }
 }
@@ -158,9 +161,9 @@ Product SetProduct(Product *product)
     system("clear||cls");
     printf(BORDER);
     printf("\nInform the code of the product: ");
-    fgets(product->code, MAX_PRODUCT_CODE_LENGTH, stdin);
-    RemoveNewLine(product->code);
+    scanf("%d", &product->code);
     printf("\nInform the name of the product: ");
+    ClearBuffer();
     fgets(product->name, MAX_PRODUCT_NAME_LENGTH, stdin);
     RemoveNewLine(product->name);
     printf("\nInform the quantity of products: ");
@@ -178,7 +181,7 @@ Result RegisterProduct(Product product, PGconn *conn)
     char query[600];
 
     snprintf(query, 600,
-        "INSERT INTO \"Product\"(code, \"costPrice\", name, \"sellingPrice\", quantity) VALUES (\'%s\' , %.2f, \'%s\', %.2f, %d);",
+        "INSERT INTO \"Product\"(code, \"costPrice\", name, \"sellingPrice\", quantity) VALUES (%d , %.2f, \'%s\', %.2f, %d);",
         product.code, product.costPrice, product.name, product.sellingPrice, product.quantity);
 
     PGresult* res = DbQuery(conn, query);
@@ -202,7 +205,7 @@ void MountProducts(PGresult *res, ProductsList *productsList)
     
     for(int i = 0; i < nRows; i++)
     {
-        strcpy(product.code, PQgetvalue(res, i, 0));
+        product.code = atoll(PQgetvalue(res, i, 0));
         product.costPrice = strtof(PQgetvalue(res, i, 1), NULL);
         product.id = atoll(PQgetvalue(res, i, 2));
         strcpy(product.name, PQgetvalue(res, i, 3));
@@ -283,7 +286,7 @@ Result EditProduct(PGconn *conn, Product product, int  id)
         return result;
     }
 
-    sprintf(query, "UPDATE \"Product\" SET code='%s', \"costPrice\"=%.2f, name='%s', \"sellingPrice\"=%.2f, quantity=%d WHERE id = %d;", product.code, product.costPrice, product.name, product.sellingPrice, product.quantity, id);
+    sprintf(query, "UPDATE \"Product\" SET code=%d, \"costPrice\"=%.2f, name='%s', \"sellingPrice\"=%.2f, quantity=%d WHERE id = %d;", product.code, product.costPrice, product.name, product.sellingPrice, product.quantity, id);
 
     PGresult* res = DbQuery(conn, query);
     ExecStatusType status = PQresultStatus(res);
@@ -304,11 +307,20 @@ int main()
 {    
     char connectionString[MAX_CONNECTION_STRING_LENGTH];    
     SetConnectionString(connectionString);
+    PGconn *conn = PQconnectdb(connectionString);
+
+    initscr();
+    keypad(stdscr, TRUE);
+    raw();
+    noecho();
+
+    wmove(stdscr, 0, 0);
+    wprintw(stdscr, "teste");
+
     ProductsList products;
     Product product;
 
-    products.lastIndex = 0;
-    PGconn *conn = PQconnectdb(connectionString);
+    InitializeList(&products);
            
     if (PQstatus(conn) == CONNECTION_BAD) 
     {
@@ -319,8 +331,8 @@ int main()
         exit(1);
     }
 
-    SetProduct(&product);
-    Result result = EditProduct(conn, product, 8);
+    // SetProduct(&product);
+    //Result result = EditProduct(conn, product, 8);
 
     // PResult pResult = GetProducts(conn, "SELECT * FROM \"Product\";");
     // system("clear||cls");
@@ -328,19 +340,16 @@ int main()
     // if (pResult.result.status == Ok)
     //     PrintProductsList(&pResult.productsList);
 
-    // printf(BORDER);
-    // printf("%s", pResult.result.message);
-    // printf(BORDER);
+    // printf("%s\n%s\n%s", pResult.result.message, BORDER, BORDER);
 
     // SetProduct(&product);
     // Result result = RegisterProduct(product, conn);
 
-    system("clear||cls");
-    printf(BORDER);
-    printf("%s", result.message);
-    printf(BORDER);
+    // system("clear||cls");
+    // printf("%s\n%s\n%s", BORDER, result.message, BORDER);
 
     PQfinish(conn);
+    char c = getch();
 
     return 0;
 }
