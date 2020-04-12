@@ -1,4 +1,4 @@
-#include "graphicInterface.h"
+#include "../headers/interface.h"
 
 void printStack(Stack *stack, char stackName)
 {

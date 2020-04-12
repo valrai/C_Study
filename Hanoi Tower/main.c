@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "./lib//headers/graphicInterface.h"
+#include "./lib//headers/interface.h"
 
 int main()
 {

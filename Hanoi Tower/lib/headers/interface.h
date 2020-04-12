@@ -6,7 +6,7 @@
 
 #include "stack.h"
 #include "game.h"
-#include "utils.h"
+#include "utilities.h"
 #include <string.h>
 
 

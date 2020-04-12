@@ -1,4 +1,4 @@
-#include "stack.h"
+#include "../headers/game.h"
 
 void inicializeStackA(Stack *stackA)
 {
